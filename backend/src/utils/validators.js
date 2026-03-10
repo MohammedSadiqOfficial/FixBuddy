@@ -52,7 +52,13 @@ export const schemas = {
             serviceType: z.string().optional(),
             description: z.string().min(10, "Description must be at least 10 characters"),
             location: z.string().optional(),
-            captainId: z.preprocess((val) => val === "" ? undefined : val, z.string().uuid("Invalid captain ID").optional())
+            captainId: z.preprocess((val) => (val === "" || val === null) ? undefined : val, z.string().uuid("Invalid captain ID").optional()),
+            images: z.preprocess((val) => {
+                if (!val) return [];
+                if (Array.isArray(val)) return val.filter(img => typeof img === 'string');
+                if (typeof val === 'string') return [val];
+                return [];
+            }, z.array(z.string()).optional().default([]))
         })
     }),
     updateServiceRequest: z.object({

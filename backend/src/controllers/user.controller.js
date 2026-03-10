@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendSMS } from '../utils/sms.js';
 
 const prisma = new PrismaClient();
 
@@ -87,13 +88,13 @@ export const getCaptainById = async (req, res, next) => {
             ? captain.reviews.reduce((acc, r) => acc + r.rating, 0) / captain.reviews.length
             : 0;
 
-        res.status(200).json({ 
-            success: true, 
-            data: { 
-                ...captain, 
-                avgRating, 
-                reviewCount: captain.reviews.length 
-            } 
+        res.status(200).json({
+            success: true,
+            data: {
+                ...captain,
+                avgRating,
+                reviewCount: captain.reviews.length
+            }
         });
     } catch (error) {
         next(error);
@@ -120,7 +121,13 @@ export const createServiceRequest = async (req, res, next) => {
         const userId = req.user.id;
 
         // Image URLs from previous middleware if any
-        const imageUrls = req.body.images || [];
+        let imageUrls = req.body.images || [];
+        if (!Array.isArray(imageUrls)) {
+            imageUrls = [imageUrls];
+        }
+
+        // Clean image URLs to ensure only strings are passed to Prisma
+        const cleanImages = imageUrls.filter(img => typeof img === 'string' && img.trim() !== "");
 
         const request = await prisma.serviceRequest.create({
             data: {
@@ -129,12 +136,25 @@ export const createServiceRequest = async (req, res, next) => {
                 title: title || serviceType || 'Service Request',
                 description,
                 location,
-                images: { set: Array.isArray(imageUrls) ? imageUrls : [imageUrls] },
+                images: { set: cleanImages },
                 status: 'PENDING'
             }
         });
 
         res.status(201).json({ success: true, data: request });
+
+        // --- SMS Notification to Captain ---
+        if (captainId && captainId !== "") {
+            try {
+                const captain = await prisma.captain.findUnique({ where: { id: captainId } });
+                if (captain && captain.phoneNumber) {
+                    const message = `Hello ${captain.name}! A new service request "${title || serviceType}" has been assigned to you. Check your dashboard for details.`;
+                    await sendSMS(captain.phoneNumber, message);
+                }
+            } catch (smsError) {
+                console.error('[SMS] Captain notification failed:', smsError.message);
+            }
+        }
     } catch (error) {
         next(error);
     }

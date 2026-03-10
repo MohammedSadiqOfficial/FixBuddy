@@ -18,13 +18,23 @@ export default function Login() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  const timerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (resendTimer > 0) {
+      timerRef.current = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [resendTimer]);
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!identifier) {
       toast.error("Please enter email or phone number.");
       return;
@@ -34,9 +44,24 @@ export default function Login() {
       await api.post("/auth/captain/login", { phoneNumber: identifier });
 
       setOtpSent(true);
+      setResendTimer(60);
       toast.success("OTP sent successfully!");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    try {
+      await api.post("/auth/resend-otp", { phoneNumber: identifier });
+      setResendTimer(60);
+      toast.success("OTP resent successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resend OTP.");
     } finally {
       setLoading(false);
     }
@@ -126,6 +151,19 @@ export default function Login() {
                   maxLength={6}
                   className="h-12 text-center text-xl tracking-widest font-mono"
                 />
+                <div className="flex flex-col items-center gap-2 mt-2">
+                  <p className="text-xs text-muted-foreground text-center">OTP sent to {identifier}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResendOtp}
+                    disabled={loading || resendTimer > 0}
+                    className="text-xs font-semibold h-auto p-0"
+                  >
+                    {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                  </Button>
+                </div>
               </div>
               <Button type="submit" className="w-full h-12 text-md font-semibold" disabled={loading}>
                 {loading ? (

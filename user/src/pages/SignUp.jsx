@@ -17,6 +17,16 @@ export default function SignUp() {
     const [formData, setFormData] = useState({ name: "", phoneNumber: "", email: "", location: "" });
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+
+    const timerRef = React.useRef(null);
+
+    React.useEffect(() => {
+        if (resendTimer > 0) {
+            timerRef.current = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+        }
+        return () => clearTimeout(timerRef.current);
+    }, [resendTimer]);
 
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />;
@@ -36,9 +46,24 @@ export default function SignUp() {
         try {
             await api.post("/auth/user/signup", formData);
             setStep(2);
+            setResendTimer(60);
             toast.success("OTP sent! Check your phone.");
         } catch (err) {
             toast.error(err.response?.data?.message || "Signup failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        try {
+            await api.post("/auth/resend-otp", { phoneNumber: formData.phoneNumber });
+            setResendTimer(60);
+            toast.success("OTP resent successfully!");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to resend OTP.");
         } finally {
             setLoading(false);
         }
@@ -127,7 +152,19 @@ export default function SignUp() {
                                     maxLength={6}
                                     className="h-12 text-center text-xl tracking-widest font-mono"
                                 />
-                                <p className="text-xs text-muted-foreground text-center">OTP sent to {formData.phoneNumber}</p>
+                                <div className="flex flex-col items-center gap-2">
+                                    <p className="text-xs text-muted-foreground">OTP sent to {formData.phoneNumber}</p>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleResendOtp}
+                                        disabled={loading || resendTimer > 0}
+                                        className="text-xs font-semibold"
+                                    >
+                                        {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                                    </Button>
+                                </div>
                             </div>
                             <Button type="submit" className="w-full h-12 text-md font-semibold" disabled={loading}>
                                 {loading ? (

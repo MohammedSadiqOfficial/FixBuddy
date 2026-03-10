@@ -4,6 +4,7 @@
 @import '@fontsource/outfit/700.css';
 @import '@fontsource/outfit/800.css';
 @import '@fontsource/outfit/900.css';
+@import "@fontsource-variable/geist";
 
 @tailwind base;
 @tailwind components;
@@ -64,16 +65,32 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  .theme {
+    --font-sans: 'Geist Variable', sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {}
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Outfit', sans-serif;
   }
+
   .dot-pattern {
     background-image: radial-gradient(hsl(var(--muted-foreground)/0.2) 1px, transparent 0);
     background-size: 32px 32px;
