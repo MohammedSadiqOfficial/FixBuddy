@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy Full Architecture Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .my-2 { margin: 10px 0; border: 0; border-top: 1px solid var(--card-border); }
+        .gap-2 { gap: 10px; }
+        .opacity-50 { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>FixBuddy Full Real-Time Architecture</h1>
+            <p>Authentication, Request Handling, Live Location, Chat, and Admin Controls.</p>
+        </header>
+
+        <!-- Main Diagram Area -->
+        <main class="dashboard">
+            <!-- Connection Lines Layer -->
+            <svg class="connections-layer" id="svg-layer">
+                <defs>
+                    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#cbd5e1" />
+                    </marker>
+                </defs>
+            </svg>
+
+            <!-- 1. USER APP -->
+            <div class="node-wrapper" style="grid-column: 1; grid-row: 1;" id="nodeUser">
+                <div class="card app-card">
+                    <div class="card-header blue-head">
+                        <div>👤 User App <span id="uNameDisplay"></span></div>
+                        <div class="dot pulse-blue"></div>
+                    </div>
+                    <div class="card-body">
+                        <!-- User Auth -->
+                        <div id="userAuthView" class="view-panel">
+                            <h4 class="mb-1 text-sm text-gray">1. Login</h4>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="userNameInput" placeholder="Enter name" class="form-input w-full" />
+                                <button class="btn btn-blue" onclick="loginUser()">Sign In</button>
+                            </div>
+                        </div>
+
+                        <!-- User Main Dashboard -->
+                        <div id="userMainView" class="view-panel opacity-50">
+                            <h4 class="mb-1 text-sm text-gray">2. Booking (Live Map)</h4>
+                            <div class="map-view" id="userMap">
+                                <span id="userMapIcon">📍</span> <span id="userMapText">Please log in first.</span>
+                            </div>
+                            <button class="btn btn-blue w-full mb-2" id="btnRequest" onclick="requestService()" disabled>Request Service</button>
+                            
+                            <!-- User Chat -->
+                            <h4 class="mb-1 text-sm text-gray">3. Communications</h4>
+                            <div class="chat-section" id="userChatSec">
+                                <div class="chat-title">Chat with Captain</div>
+                                <div class="chat-messages" id="userChatMsgs"></div>
+                                <div class="chat-input-wrapper">
+                                    <input type="text" id="userMsgInput" class="form-input w-full" placeholder="Message..." disabled />
+                                    <button class="btn btn-blue sm-btn" onclick="sendUserMsg()" disabled id="btnSendUMsg">➤</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. CAPTAIN APP -->
+            <div class="node-wrapper" style="grid-column: 3; grid-row: 1;" id="nodeCaptain">
+                <div class="card app-card">
+                    <div class="card-header orange-head">
+                        <div>👷 Captain App <span id="cNameDisplay"></span></div>
+                        <div class="dot pulse-orange"></div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Captain Auth -->
+                        <div id="capAuthView" class="view-panel">
+                            <h4 class="mb-1 text-sm text-gray">1. Login</h4>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="capNameInput" placeholder="License / Name" class="form-input w-full" />
+                                <button class="btn btn-orange" onclick="loginCaptain()">Go Online</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Captain Main Dashboard -->
+                        <div id="capMainView" class="view-panel opacity-50">
+                            <h4 class="mb-1 text-sm text-gray">2. Duty & Location</h4>
+                            <div class="status-view mb-2" id="captainStatus">
+                                <span class="badge gray">Idle - Offline</span>
+                            </div>
+                            <div class="flex gap-2 mb-2">
+                                <button class="btn btn-orange w-full" id="btnAccept" disabled onclick="acceptRequest()">Accept Request</button>
+                                <button class="btn btn-green w-full" id="btnLocation" disabled onclick="startLiveLocation()">Live Location</button>
+                            </div>
+
+                            <!-- Captain Chat -->
+                            <h4 class="mb-1 text-sm text-gray">3. Communications</h4>
+                            <div class="chat-section" id="capChatSec">
+                                <div class="chat-title">Chat with User</div>
+                                <div class="chat-messages" id="capChatMsgs"></div>
+                                <div class="chat-input-wrapper">
+                                    <input type="text" id="capMsgInput" class="form-input w-full" placeholder="Message..." disabled />
+                                    <button class="btn btn-orange sm-btn" onclick="sendCapMsg()" disabled id="btnSendCMsg">➤</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. NODE.JS BACKEND -->
+            <div class="node-wrapper" style="grid-column: 2; grid-row: 2;" id="nodeBackend">
+                <div class="card server-card">
+                    <div class="card-header dark-head">
+                        <div>🚀 Node.js Backend</div>
+                        <div class="dot green" id="backendDot"></div>
+                    </div>
+                    <div class="card-body internal-modules">
+                        <div class="module rest-mod" id="modExpress">🌐 Express API (Core logic)</div>
+                        <div class="module socket-mod highlight-teal" id="modSocket">⚡ Socket.io (WebSocket Event Hub)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ADMIN APP (Controller) -->
+            <div class="node-wrapper" style="grid-column: 1; grid-row: 3;" id="nodeAdmin">
+                <div class="card app-card">
+                    <div class="card-header purple-head">
+                        <div>🛡️ Admin Dashboard</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Admin metrics -->
+                        <div class="admin-metrics mb-2">
+                            <div class="metric">
+                                <div class="metric-val" id="adminReqs">0</div>
+                                <div class="metric-label">Active request</div>
+                            </div>
+                        </div>
+                        <div class="location-monitor mb-2" id="adminLocation">
+                            📡 Location Monitoring: Idle
+                        </div>
+                        <!-- Admin Tools -->
+                        <div class="admin-tools">
+                            <h4 class="mb-1 text-sm text-gray">Project Controls</h4>
+                            <div class="flex gap-2">
+                                <button class="btn btn-danger w-full mb-2" onclick="adminReset()">Reset All</button>
+                                <button class="btn btn-gray w-full mb-2" id="btnPause" onclick="adminToggleServer()">Pause Server</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. DATABASE -->
+            <div class="node-wrapper" style="grid-column: 3; grid-row: 3;" id="nodeDB">
+                <div class="card db-card">
+                    <div class="card-header outline-head">
+                        <div class="font-bold">🍃 MongoDB Cluster</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="db-logs" id="dbLogs">
+                            <div class="text-sm text-gray" style="margin-bottom:8px;">Collections: users, captains...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- System Console -->
+        <section class="console-logger">
+            <div class="console-header">System Event Console</div>
+            <div class="console-body" id="sysLogs">
+                <div class="log-info">[System] Application loaded successfully.</div>
+            </div>
+        </section>
+
+        <!-- Application Flow Guide -->
+        <section class="app-flow-section">
+            <div class="flow-header">
+                <h2>FixBuddy Application Flow Guide</h2>
+                <p>Step-by-step documentation of the real-time architectural process.</p>
+            </div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Authentication</h3>
+                        <p>User and Captain sign in. The backend validates credentials and registers their Socket.io connections.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Service Request</h3>
+                        <p>User clicks "Request Service". An API POST request creates a database record, and Socket.io broadcasts the request to nearby Captains.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Captain Assignment</h3>
+                        <p>The Captain accepts the request. The backend updates the MongoDB ride status and notifies the User that a Captain is on the way.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h3>Live Location Sync</h3>
+                        <p>The Captain app begins emitting GPS coordinates. The Node server handles the payload, bypassing heavy DB writes, and WebSockets it straight to the User's map.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">5</div>
+                    <div class="step-content">
+                        <h3>Instant Chat</h3>
+                        <p>Both clients can communicate seamlessly. Messages are emitted as Socket events, instantly delivered, and asynchronously stored in MongoDB for history.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">6</div>
+                    <div class="step-content">
+                        <h3>Admin Governance</h3>
+                        <p>The Admin Dashboard subscribes to global Socket rooms, passively monitoring active request, locations, and retaining the ability to reset or pause traffic.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Script Block -->
+    <script>
+        const DOM = {
+            svg: document.getElementById('svg-layer'),
+            userMain: document.getElementById('userMainView'),
+            uNameDisplay: document.getElementById('uNameDisplay'),
+            uInput: document.getElementById('userNameInput'),
+            capMain: document.getElementById('capMainView'),
+            cNameDisplay: document.getElementById('cNameDisplay'),
+            cInput: document.getElementById('capNameInput'),
+            
+            btnRequest: document.getElementById('btnRequest'),
+            userMapText: document.getElementById('userMapText'),
+            userMapIcon: document.getElementById('userMapIcon'),
+            userChatMsgs: document.getElementById('userChatMsgs'),
+            userMsgInput: document.getElementById('userMsgInput'),
+            btnSendUMsg: document.getElementById('btnSendUMsg'),
+            
+            btnAccept: document.getElementById('btnAccept'),
+            btnLocation: document.getElementById('btnLocation'),
+            captainStatus: document.getElementById('captainStatus'),
+            capChatMsgs: document.getElementById('capChatMsgs'),
+            capMsgInput: document.getElementById('capMsgInput'),
+            btnSendCMsg: document.getElementById('btnSendCMsg'),
+            
+            sysLogs: document.getElementById('sysLogs'),
+            dbLogs: document.getElementById('dbLogs'),
+            adminReqs: document.getElementById('adminReqs'),
+            adminLocation: document.getElementById('adminLocation'),
+            btnPause: document.getElementById('btnPause'),
+            backendDot: document.getElementById('backendDot')
+        };
+
+        let state = {
+            user: null, captain: null,
+            requestStatus: 'none', locationInterval: null, serverPaused: false
+        };
+
+        const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+        function drawLine(id1, id2) {
+            const el1 = document.getElementById(id1);
+            const el2 = document.getElementById(id2);
+            if (!el1 || !el2) return;
+
+            const sr = DOM.svg.getBoundingClientRect();
+            const r1 = el1.getBoundingClientRect();
+            const r2 = el2.getBoundingClientRect();
+
+            const x1 = r1.left + r1.width/2 - sr.left;
+            const y1 = r1.top + r1.height/2 - sr.top;
+            const x2 = r2.left + r2.width/2 - sr.left;
+            const y2 = r2.top + r2.height/2 - sr.top;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            path.setAttribute('x1', x1); path.setAttribute('y1', y1);
+            path.setAttribute('x2', x2); path.setAttribute('y2', y2);
+            path.setAttribute('class', 'svg-connection');
+            path.setAttribute('marker-end', 'url(#arrow-blue)');
+            DOM.svg.appendChild(path);
+        }
+
+        window.onload = () => {
+            drawLine('nodeUser', 'nodeBackend'); drawLine('nodeCaptain', 'nodeBackend');
+            drawLine('nodeBackend', 'nodeDB'); drawLine('nodeBackend', 'nodeAdmin');
+        };
+
+        function addLog(text, type = 'info') {
+            const row = document.createElement('div');
+            row.className = `log-${type}`;
+            row.innerHTML = `<span class="timestamp">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+            DOM.sysLogs.appendChild(row);
+            DOM.sysLogs.scrollTop = DOM.sysLogs.scrollHeight;
+        }
+
+        function addDBLog(query) {
+            const row = document.createElement('div');
+            row.className = 'db-query-flash text-sm';
+            row.innerHTML = `> &nbsp; ${query}`;
+            DOM.dbLogs.appendChild(row);
+            while(DOM.dbLogs.children.length > 5) DOM.dbLogs.removeChild(DOM.dbLogs.firstElementChild);
+        }
+
+        async function fireArrow(fromId, toId, colorCss) {
+            if (state.serverPaused && (toId === 'nodeBackend' || fromId === 'nodeBackend')) return;
+
+            const el1 = document.getElementById(fromId);
+            const el2 = document.getElementById(toId);
+            const arrow = document.createElement('div');
+            arrow.className = 'moving-arrow'; arrow.innerHTML = '➔'; arrow.style.color = colorCss;
+
+            const r1 = el1.getBoundingClientRect(), r2 = el2.getBoundingClientRect();
+            const sx = r1.left + r1.width/2, sy = r1.top + r1.height/2;
+            const dx = r2.left + r2.width/2, dy = r2.top + r2.height/2;
+
+            arrow.style.left = sx + 'px'; arrow.style.top = sy + 'px';
+            document.body.appendChild(arrow);
+            
+            const angle = Math.atan2(dy - sy, dx - sx) * 180 / Math.PI;
+            arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            arrow.getBoundingClientRect();
+
+            arrow.style.transform = `translate(calc(-50% + ${dx - sx}px), calc(-50% + ${dy - sy}px)) rotate(${angle}deg)`;
+
+            await sleep(900);
+            arrow.remove();
+            el2.classList.add('pop-anim');
+            setTimeout(() => el2.classList.remove('pop-anim'), 300);
+        }
+
+        // ======================= AUTH ======================= //
+        window.loginUser = async () => {
+            if(state.serverPaused) return addLog("Backend is paused.", "danger");
+            const name = DOM.uInput.value || "Guest";
+            state.user = name;
+            addLog(`User [${name}] attempting to sign in.`, "info");
+            await fireArrow('nodeUser', 'nodeBackend', '#3b82f6');
+            addDBLog(`db.users.findOne({name: '${name}'})`);
+            await fireArrow('nodeBackend', 'nodeDB', '#10b981');
+            await fireArrow('nodeBackend', 'nodeUser', '#3b82f6');
+            
+            // Enable features
+            DOM.userMain.classList.remove('opacity-50');
+            DOM.btnRequest.disabled = false;
+            DOM.userMapText.innerText = "Ready to book.";
+            DOM.uNameDisplay.innerText = `(${name})`;
+            document.getElementById('userAuthView').classList.add('opacity-50'); // Dim auth
+        };
+
+        window.loginCaptain = async () => {
+            if(state.serverPaused) return addLog("Backend is paused.", "danger");
+            const name = DOM.cInput.value || "Pilot_01";
+            state.captain = name;
+            addLog(`Captain [${name}] connecting socket.`, "captain");
+            await fireArrow('nodeCaptain', 'nodeBackend', '#f97316');
+            addDBLog(`db.captains.updateOne({name: '${name}', status: 'online'})`);
+            await fireArrow('nodeBackend', 'nodeDB', '#10b981');
+            await fireArrow('nodeBackend', 'nodeCaptain', '#f97316'); // Wait sequentially to show DB fetch
+            
+            DOM.capMain.classList.remove('opacity-50');
+            DOM.cNameDisplay.innerText = `(${name})`;
+            DOM.captainStatus.innerHTML = `<span class="badge green">Online • Awaiting Requests</span>`;
+            document.getElementById('capAuthView').classList.add('opacity-50');
+        };
+
+        // ======================= REQUEST ======================= //
+        window.requestService = async () => {
+            if (state.serverPaused || state.requestStatus !== 'none') return;
+            state.requestStatus = 'pending';
+            DOM.btnRequest.disabled = true;
+            DOM.userMapText.innerText = "Finding Captain...";
+            
+            await fireArrow('nodeUser', 'nodeBackend', '#3b82f6');
+            addLog("Backend: Receiving [create_request]. Formatting.", "server");
+            await fireArrow('nodeBackend', 'nodeDB', '#10b981');
+            addDBLog(`db.request.insertOne({user: '${state.user}', status: 'pending'})`);
+            DOM.adminReqs.innerText = "1";
+
+            fireArrow('nodeBackend', 'nodeAdmin', '#a855f7');
+            await fireArrow('nodeBackend', 'nodeCaptain', '#f97316');
+
+            if(state.captain) {
+                DOM.captainStatus.innerHTML = `<span class="badge orange">Incoming FixBuddy Request!</span>`;
+                DOM.btnAccept.disabled = false;
+            } else {
+                addLog("System Note: Connect a Captain to accept.", "danger");
+            }
+        };
+
+        window.acceptRequest = async () => {
+            if (state.serverPaused) return;
+            DOM.btnAccept.disabled = true;
+            DOM.captainStatus.innerHTML = `<span class="badge processing">Accepting...</span>`;
+            
+            await fireArrow('nodeCaptain', 'nodeBackend', '#f97316');
+            addDBLog(`db.request.updateOne({status: 'accepted', captain: '${state.captain}'})`);
+            await fireArrow('nodeBackend', 'nodeDB', '#10b981');
+
+            fireArrow('nodeBackend', 'nodeAdmin', '#a855f7');
+            await fireArrow('nodeBackend', 'nodeUser', '#3b82f6');
+
+            state.requestStatus = 'accepted';
+            DOM.userMapText.innerText = "Captain Assigned!";
+            DOM.userMapText.style.color = '#10b981';
+            DOM.userMapIcon.innerText = "🚕";
+            
+            DOM.captainStatus.innerHTML = `<span class="badge green">On Duty (In-Ride)</span>`;
+            DOM.btnLocation.disabled = false;
+
+            // Enable Chat
+            DOM.userMsgInput.disabled = false; DOM.btnSendUMsg.disabled = false;
+            DOM.capMsgInput.disabled = false; DOM.btnSendCMsg.disabled = false;
+        };
+
+        // ======================= LOCATION ======================= //
+        window.startLiveLocation = async () => {
+            if (state.locationInterval) {
+                clearInterval(state.locationInterval);
+                state.locationInterval = null;
+                DOM.btnLocation.innerText = "Broadcast Location";
+                DOM.btnLocation.className = "btn btn-green w-full";
+                addLog("Captain App: Stopped Location Update stream.", "captain");
+                return;
+            }
+
+            DOM.btnLocation.innerText = "Stop Location";
+            DOM.btnLocation.className = "btn btn-danger w-full";
+            let coords = 100;
+
+            state.locationInterval = setInterval(async () => {
+                if(state.serverPaused) return;
+                coords += 15;
+                addLog(`Captain [Socket]: emit location update.`, "captain");
+                await fireArrow('nodeCaptain', 'nodeBackend', '#0ea5e9');
+                fireArrow('nodeBackend', 'nodeAdmin', '#a855f7');
+                await fireArrow('nodeBackend', 'nodeUser', '#3b82f6');
+                
+                DOM.userMapText.innerText = `Captain approaching [${coords}m away]`;
+                DOM.adminLocation.innerHTML = `📡 Location Ping: Obj [${coords}]`;
+            }, 5000);
+        };
+
+        // ======================= CHAT ======================= //
+        window.sendUserMsg = async () => {
+            if (state.serverPaused) return;
+            const text = DOM.userMsgInput.value.trim();
+            if(!text) return;
+            DOM.userChatMsgs.innerHTML += `<div class="msg sent">${text}</div>`;
+            DOM.userMsgInput.value = ''; DOM.userChatMsgs.scrollTop = DOM.userChatMsgs.scrollHeight;
+
+            await fireArrow('nodeUser', 'nodeBackend', '#3b82f6');
+            addDBLog(`db.messages.insertOne(...)`);
+            fireArrow('nodeBackend', 'nodeDB', '#10b981');
+            await fireArrow('nodeBackend', 'nodeCaptain', '#f97316');
+
+            DOM.capChatMsgs.innerHTML += `<div class="msg received">${text}</div>`;
+            DOM.capChatMsgs.scrollTop = DOM.capChatMsgs.scrollHeight;
+        };
+
+        window.sendCapMsg = async () => {
+            if (state.serverPaused) return;
+            const text = DOM.capMsgInput.value.trim();
+            if(!text) return;
+            DOM.capChatMsgs.innerHTML += `<div class="msg sent">${text}</div>`;
+            DOM.capMsgInput.value = ''; DOM.capChatMsgs.scrollTop = DOM.capChatMsgs.scrollHeight;
+
+            await fireArrow('nodeCaptain', 'nodeBackend', '#f97316');
+            addDBLog(`db.messages.insertOne(...)`);
+            fireArrow('nodeBackend', 'nodeDB', '#10b981');
+            await fireArrow('nodeBackend', 'nodeUser', '#3b82f6');
+
+            DOM.userChatMsgs.innerHTML += `<div class="msg received">${text}</div>`;
+            DOM.userChatMsgs.scrollTop = DOM.userChatMsgs.scrollHeight;
+        };
+
+        // ======================= ADMIN ======================= //
+        window.adminToggleServer = () => {
+            state.serverPaused = !state.serverPaused;
+            if (state.serverPaused) {
+                DOM.btnPause.innerText = "Resume Server";
+                DOM.btnPause.className = "btn w-full btn-green mb-2";
+                DOM.backendDot.classList.remove('green');
+                DOM.backendDot.style.backgroundColor = 'red';
+                addLog("Admin: Node Server Paused.", "danger");
+            } else {
+                DOM.btnPause.innerText = "Pause Server";
+                DOM.btnPause.className = "btn btn-gray w-full mb-2";
+                DOM.backendDot.style.backgroundColor = '';
+                DOM.backendDot.classList.add('green');
+                addLog("Admin: Node Server Resumed.", "success");
+            }
+        };
+
+        window.adminReset = () => {
+            if(state.locationInterval) clearInterval(state.locationInterval);
+            state.requestStatus = 'none'; state.locationInterval = null;
+            DOM.adminReqs.innerText = "0"; DOM.adminLocation.innerHTML = "📡 Location Monitoring: Idle";
+            
+            DOM.btnRequest.disabled = !state.user;
+            DOM.userMapText.innerText = state.user ? "Ready to book." : "Please log in first.";
+            DOM.userMapText.style.color = ''; DOM.userMapIcon.innerText = "📍";
+            DOM.userChatMsgs.innerHTML = ''; DOM.userMsgInput.disabled = true; DOM.btnSendUMsg.disabled=true;
+            
+            DOM.captainStatus.innerHTML = state.captain ? `<span class="badge green">Online • Awaiting Requests</span>` : `<span class="badge gray">Idle - Offline</span>`;
+            DOM.btnAccept.disabled = true; DOM.btnLocation.disabled = true;
+            DOM.btnLocation.innerText = "Live Location"; DOM.btnLocation.className = "btn btn-green w-full";
+            DOM.capChatMsgs.innerHTML = ''; DOM.capMsgInput.disabled = true; DOM.btnSendCMsg.disabled=true;
+
+            addDBLog("db.request.deleteMany({})");
+            addLog("Admin: System Reset executed.", "danger");
+        };
+
+        DOM.userMsgInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendUserMsg(); });
+        DOM.capMsgInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendCapMsg(); });
+    </script>
+</body>
+
+</html>

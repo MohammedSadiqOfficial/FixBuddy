@@ -29,8 +29,8 @@ export const schemas = {
         body: z.object({
             name: z.string().min(2, "Name must be at least 2 characters"),
             phoneNumber: z.string().regex(phoneRegex, "Invalid phone number"),
-            email: z.string().email("Invalid email").optional(),
-            password: z.string().min(6, "Password must be at least 6 characters").optional(), // if using auth logic
+            email: z.string().email("Invalid email"),
+            password: z.string().min(6, "Password must be at least 6 characters").optional(),
             skills: z.array(z.string()).optional().default([]),
             hourlyRate: z.number().optional()
         })
