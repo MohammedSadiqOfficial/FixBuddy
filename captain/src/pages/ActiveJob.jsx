@@ -20,6 +20,38 @@ import { AuthContext } from "../context/AuthContext";
 import { MapPin, Send, Phone, CheckCircle, Clock, MoreVertical, DollarSign, PlayCircle, XCircle, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import api from "../services/api";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
+import L from "leaflet";
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [16, -28],
+    shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const UserIcon = L.divIcon({
+    html: `<div style="background:#3b82f6;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 2px #3b82f6;"></div>`,
+    className: '',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+});
+
+const CaptainIcon = L.divIcon({
+    html: `<div style="background:#22c55e;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 2px #22c55e;"></div>`,
+    className: '',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+});
 
 export default function ActiveJob() {
   const { id } = useParams();
@@ -32,6 +64,7 @@ export default function ActiveJob() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [jobStatus, setJobStatus] = useState("accepted");
+  const [userLocation, setUserLocation] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -80,7 +113,15 @@ export default function ActiveJob() {
           }]);
         }
       });
-      return () => socket.off("receive_message");
+      socket.on("user_location_update", (data) => {
+        if (data.serviceRequestId === id) {
+          setUserLocation({ latitude: data.latitude, longitude: data.longitude });
+        }
+      });
+      return () => {
+        socket.off("receive_message");
+        socket.off("user_location_update");
+      };
     }
   }, [socket, id, captain?.id]);
 
@@ -245,6 +286,28 @@ export default function ActiveJob() {
                     ))}
                   </div>
                 </>
+              )}
+
+              {userLocation && (
+                <div className="mt-4 border rounded-xl overflow-hidden h-48 relative">
+                  <MapContainer center={[userLocation.latitude, userLocation.longitude]} zoom={14} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+                    <TileLayer
+                      attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    />
+                    <Marker position={[userLocation.latitude, userLocation.longitude]} icon={UserIcon}>
+                      <Popup>Customer's Live Location</Popup>
+                    </Marker>
+                    {captain?.latitude && captain?.longitude && (
+                      <Marker position={[captain.latitude, captain.longitude]} icon={CaptainIcon}>
+                        <Popup>Your Location</Popup>
+                      </Marker>
+                    )}
+                  </MapContainer>
+                  <div className="absolute bottom-2 left-2 z-[400] text-xs font-semibold bg-background/90 px-2 py-1 rounded-full shadow border">
+                    LIVE TRACKING
+                  </div>
+                </div>
               )}
             </CardContent>
 

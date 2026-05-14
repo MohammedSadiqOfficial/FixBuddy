@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { BrandWordmark } from "../components/BrandWordmark";
-import { Home, ListOrdered, Star, User, LogOut, Menu, Activity, MessageSquare } from "lucide-react";
+import { Home, ListOrdered, Star, User, LogOut, Menu, Activity, MessageSquare, HelpCircle } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
@@ -22,6 +22,7 @@ const navItems = [
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "Reviews", href: "/reviews", icon: Star },
   { name: "Profile", href: "/profile", icon: User },
+  { name: "Support", href: "/support", icon: HelpCircle },
 ];
 
 export const MainLayout = () => {

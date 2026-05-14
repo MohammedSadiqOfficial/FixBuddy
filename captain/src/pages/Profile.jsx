@@ -124,15 +124,15 @@ export default function Profile() {
     <div className="min-h-screen bg-background">
       {/* Page Header */}
       <div className="border-b border-border/60 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">Captain Profile</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage your professional identity & portfolio</p>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Captain Profile</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage your professional identity & portfolio</p>
           </div>
           <Button
             onClick={handleSave}
             disabled={loading}
-            className="h-10 px-6 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="hidden sm:inline-flex h-10 px-6 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -146,8 +146,8 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[300px_1fr]">
 
           {/* ── LEFT COLUMN ── */}
           <aside className="space-y-5 lg:sticky lg:top-[73px] h-max">
@@ -377,9 +377,9 @@ export default function Profile() {
                       <CardDescription className="text-sm">Showcase your previous work with uploads or live camera shots</CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="portfolio-upload" className="cursor-pointer">
-                      <Button variant="outline" asChild className="h-9 px-4 rounded-xl font-bold border-2 text-xs">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+                    <label htmlFor="portfolio-upload" className="cursor-pointer w-full sm:w-auto">
+                      <Button variant="outline" asChild className="w-full h-9 px-4 rounded-xl font-bold border-2 text-xs">
                         <span>
                           <UploadCloud className="h-3.5 w-3.5 mr-1.5" /> Upload
                         </span>
@@ -393,8 +393,8 @@ export default function Profile() {
                         onChange={handleWorkImageUpload}
                       />
                     </label>
-                    <label htmlFor="portfolio-capture" className="cursor-pointer">
-                      <Button variant="outline" asChild className="h-9 px-4 rounded-xl font-bold border-2 text-xs">
+                    <label htmlFor="portfolio-capture" className="cursor-pointer w-full sm:w-auto">
+                      <Button variant="outline" asChild className="w-full h-9 px-4 rounded-xl font-bold border-2 text-xs">
                         <span>
                           <Camera className="h-3.5 w-3.5 mr-1.5" /> Capture
                         </span>

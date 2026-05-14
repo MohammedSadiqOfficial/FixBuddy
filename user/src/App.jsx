@@ -15,6 +15,7 @@ const Chat = lazy(() => import("./pages/Chat"));
 const Profile = lazy(() => import("./pages/Profile"));
 const RequestDetails = lazy(() => import("./pages/RequestDetails"));
 const CaptainProfile = lazy(() => import("./pages/CaptainProfile"));
+const HelpSupport = lazy(() => import("./pages/HelpSupport"));
 
 const LoadingFallback = () => (
     <div className="min-h-screen flex items-center justify-center bg-background px-6">
@@ -46,6 +47,7 @@ function App() {
                             <Route path="/chat" element={<Chat />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/professionals/:id" element={<CaptainProfile />} />
+                            <Route path="/support" element={<HelpSupport />} />
                         </Route>
                     </Route>
 

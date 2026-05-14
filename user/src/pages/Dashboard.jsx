@@ -108,12 +108,29 @@ export default function Dashboard() {
         };
         fetchData();
 
-        // Get user's current location
+        // Get and watch user's current location to broadcast to Captain
         if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                () => console.warn("Could not get user location")
+            const watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                    setUserLocation(coords);
+                    
+                    if (socket && activeRequest && (activeRequest.status === "ACCEPTED" || activeRequest.status === "ONGOING")) {
+                        socket.emit("update_user_location", {
+                            userId: user?.id,
+                            serviceRequestId: activeRequest.id,
+                            latitude: coords.latitude,
+                            longitude: coords.longitude
+                        });
+                    }
+                },
+                () => console.warn("Could not get user location"),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
+
+            return () => {
+                navigator.geolocation.clearWatch(watchId);
+            };
         }
     }, []);
 
@@ -284,8 +301,8 @@ export default function Dashboard() {
                                 style={{ height: "100%", width: "100%" }}
                             >
                                 <TileLayer
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                                 />
                                 <MapBoundsFitter captainLoc={captainLocation} userLoc={userLocation} />
                                 {captainLocation && (

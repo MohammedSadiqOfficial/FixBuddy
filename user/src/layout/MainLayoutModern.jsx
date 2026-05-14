@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { ClipboardList, Home, LogOut, Menu, MessageSquare, Search, User } from "lucide-react";
+import { ClipboardList, Home, LogOut, Menu, MessageSquare, Search, User, HelpCircle } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -14,6 +14,7 @@ const navItems = [
     { name: "Find Pros", href: "/find", icon: Search },
     { name: "Requests", href: "/requests", icon: ClipboardList },
     { name: "Chat", href: "/chat", icon: MessageSquare },
+    { name: "Support", href: "/support", icon: HelpCircle },
 ];
 
 export function MainLayoutModern() {

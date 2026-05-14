@@ -45,6 +45,12 @@ export const initSocket = (server) => {
             io.emit('captain_location_update', { captainId, latitude, longitude });
         });
 
+        socket.on('update_user_location', (data) => {
+            const { userId, serviceRequestId, latitude, longitude } = data;
+            // Broadcast user location to the specific request room
+            io.to(serviceRequestId).emit('user_location_update', { serviceRequestId, userId, latitude, longitude });
+        });
+
         socket.on('disconnect', () => {
             console.log('User disconnected');
         });

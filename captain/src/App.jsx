@@ -12,6 +12,7 @@ const ActiveJob = lazy(() => import("./pages/ActiveJob"));
 const Reviews = lazy(() => import("./pages/Reviews"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Chat = lazy(() => import("./pages/Chat"));
+const HelpSupport = lazy(() => import("./pages/HelpSupport"));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -36,6 +37,7 @@ function App() {
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/support" element={<HelpSupport />} />
             </Route>
           </Route>
 
