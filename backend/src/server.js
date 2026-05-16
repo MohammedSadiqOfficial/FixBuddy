@@ -42,10 +42,14 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
+
+// On Vercel, the app is exported as a serverless function.
+// Locally, we start the HTTP server manually.
+if (!process.env.VERCEL) {
     httpServer.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
 }
 
 export default app;
+

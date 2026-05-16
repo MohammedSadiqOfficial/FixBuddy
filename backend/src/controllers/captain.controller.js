@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { deleteFromCloudinary } from '../utils/cloudinary.js';
 import { sendUserRequestStatusEmail } from '../utils/mailer.js';
+import { emitToCaptains } from '../sockets/socket.js';
 
 const prisma = new PrismaClient();
 
@@ -23,17 +24,25 @@ export const getRequests = async (req, res, next) => {
         const requests = await prisma.serviceRequest.findMany({
             where: {
                 OR: [
+                    // Public open requests: PENDING and not targeted to any specific captain
                     {
                         status: 'PENDING',
                         captainId: null
                     },
+                    // Requests targeted specifically at THIS captain (still PENDING = not yet accepted)
+                    {
+                        status: 'PENDING',
+                        captainId
+                    },
+                    // This captain's active/ongoing jobs
                     {
                         captainId,
-                        status: { in: ['PENDING', 'ACCEPTED', 'ONGOING'] }
+                        status: { in: ['ACCEPTED', 'ONGOING'] }
                     }
                 ]
             },
-            include: { user: true }
+            include: { user: true },
+            orderBy: { createdAt: 'desc' }
         });
         res.status(200).json({ success: true, data: requests });
     } catch (error) {
@@ -119,6 +128,11 @@ export const updateRequestStatus = async (req, res, next) => {
             data: updateData
         });
 
+        // When a captain accepts a job, broadcast to ALL captains so they remove it from their feed instantly
+        if (status === 'ACCEPTED') {
+            emitToCaptains('request_accepted', { requestId: id, captainId });
+        }
+
         // Update captain's total earnings if job is completed
         if (status === 'COMPLETED') {
             await prisma.captain.update({
@@ -196,7 +210,7 @@ export const updateLocation = async (req, res, next) => {
         const captainId = req.user.id;
         const { latitude, longitude } = req.body;
 
-        const updatedCaptain = await prisma.captain.update({
+        await prisma.captain.update({
             where: { id: captainId },
             data: { latitude, longitude }
         });
@@ -298,6 +312,18 @@ export const getDashboardStats = async (req, res, next) => {
             select: { totalEarnings: true }
         });
 
+        // Fetch the current active job (ACCEPTED or ONGOING) so captain can see user location on dashboard
+        const activeJob = await prisma.serviceRequest.findFirst({
+            where: {
+                captainId,
+                status: { in: ['ACCEPTED', 'ONGOING'] }
+            },
+            include: {
+                user: { select: { id: true, name: true, profileImage: true } }
+            },
+            orderBy: { updatedAt: 'desc' }
+        });
+
         res.status(200).json({
             success: true,
             data: {
@@ -305,7 +331,8 @@ export const getDashboardStats = async (req, res, next) => {
                 activeJobs,
                 totalReviews,
                 avgRating: parseFloat(avgRating.toFixed(1)),
-                totalEarnings: captain?.totalEarnings || 0
+                totalEarnings: captain?.totalEarnings || 0,
+                activeJob: activeJob || null
             }
         });
     } catch (error) {

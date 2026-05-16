@@ -32,8 +32,9 @@ export default function HelpSupport() {
             const res = await api.post("/ai/help", { question: userText });
             setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: res.data.data }]);
         } catch (err) {
-            toast.error("Failed to fetch response. AI might be temporarily unavailable.");
-            setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: "Sorry, I am having trouble connecting to the network right now." }]);
+            const errorMsg = err.response?.data?.message || "Sorry, I am having trouble connecting to the AI right now. Please try again.";
+            toast.error(errorMsg);
+            setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: `⚠️ ${errorMsg}` }]);
         } finally {
             setLoading(false);
         }

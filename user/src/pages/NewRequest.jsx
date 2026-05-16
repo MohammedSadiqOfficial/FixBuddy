@@ -25,6 +25,7 @@ export default function NewRequest() {
         urgency: "normal",
     });
     const [images, setImages] = useState([]);
+    const [captainName, setCaptainName] = useState("");
     const location = useLocation();
 
     useEffect(() => {
@@ -32,6 +33,16 @@ export default function NewRequest() {
         const captainId = params.get("captainId");
         if (captainId) {
             setForm(prev => ({ ...prev, captainId }));
+            // Fetch captain details to show name
+            const fetchCaptain = async () => {
+                try {
+                    const res = await api.get(`/user/captain/${captainId}`);
+                    setCaptainName(res.data.data.name);
+                } catch (err) {
+                    console.error("Failed to fetch captain name");
+                }
+            };
+            fetchCaptain();
         }
     }, [location.search]);
 
@@ -190,6 +201,20 @@ export default function NewRequest() {
                     <p className="text-sm text-muted-foreground">Describe your issue and find the right pro.</p>
                 </div>
             </div>
+
+            {captainName && (
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-primary">Directing Request to:</p>
+                            <p className="text-lg font-black text-foreground">{captainName}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Card className="shadow-sm">
                 <CardHeader>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -8,29 +8,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { SocketContext } from "../context/SocketContext";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Requests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext);
+  const { captain } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const res = await api.get('/captain/requests');
-        // Transform the response data to match the component's expected structure
-        const formattedRequests = res.data.data.map(req => ({
-          id: req.id,
-          user: req.user,
-          description: req.description || req.title,
-          distance: req.location || "N/A", // Map to actual distance if available later
-          time: new Date(req.createdAt).toLocaleDateString(),
-          images: req.images ? req.images.length : 0,
-          category: req.serviceType || "General",
-          status: req.status
-        }));
+        const formattedRequests = res.data.data
+          // Only show PENDING requests in this feed (ACCEPTED/ONGOING belong in ActiveJob)
+          .filter(req => req.status === 'PENDING')
+          .map(req => ({
+            id: req.id,
+            user: req.user,
+            description: req.description || req.title,
+            distance: req.location || "N/A",
+            time: new Date(req.createdAt).toLocaleDateString(),
+            images: req.images ? req.images.length : 0,
+            category: req.serviceType || "General",
+            status: req.status,
+            isTargeted: !!req.captainId // true if this was sent specifically to this captain
+          }));
 
-        // Filter out accepted jobs if they belong somewhere else, or keep them if intended (controller grabs PENDING, ACCEPTED, ONGOING)
         setRequests(formattedRequests);
       } catch (err) {
         toast.error("Failed to load requests");
@@ -40,6 +46,29 @@ export default function Requests() {
     };
     fetchRequests();
   }, []);
+
+  // Register with socket and listen for real-time events
+  useEffect(() => {
+    if (!socket || !captain) return;
+
+    // Join shared captains room so we receive broadcast events
+    socket.emit("register_captain", captain.id);
+
+    // When another captain accepts a request, remove it from our feed instantly
+    const handleRequestAccepted = ({ requestId, captainId: acceptedBy }) => {
+      // If WE accepted it, we navigate away already — this handles OTHER captains' UIs
+      if (acceptedBy !== captain.id) {
+        setRequests(prev => prev.filter(req => req.id !== requestId));
+        toast.info("A request was just accepted by another captain.", { duration: 3000 });
+      }
+    };
+
+    socket.on("request_accepted", handleRequestAccepted);
+
+    return () => {
+      socket.off("request_accepted", handleRequestAccepted);
+    };
+  }, [socket, captain]);
 
   const handleAccept = async (id) => {
     try {
@@ -113,6 +142,11 @@ export default function Requests() {
                       <CardTitle className="text-lg flex items-center gap-2">
                         {req.user?.name || "Unknown User"}
                         <Badge variant="outline" className="ml-2 bg-background">{req.category}</Badge>
+                        {req.isTargeted && (
+                          <Badge className="ml-1 bg-primary/90 text-primary-foreground text-xs">
+                            Direct Request
+                          </Badge>
+                        )}
                       </CardTitle>
                       <div className="flex items-center text-sm text-muted-foreground mt-1 gap-4">
                         <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1" />{req.distance}</span>
