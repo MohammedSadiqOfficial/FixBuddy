@@ -107,46 +107,51 @@ export default function Dashboard() {
             }
         };
         fetchData();
-
-        // Get and watch user's current location to broadcast to Captain
-        if ("geolocation" in navigator) {
-            const watchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-                    setUserLocation(coords);
-                    
-                    if (socket && activeRequest && (activeRequest.status === "ACCEPTED" || activeRequest.status === "ONGOING")) {
-                        socket.emit("update_user_location", {
-                            userId: user?.id,
-                            serviceRequestId: activeRequest.id,
-                            latitude: coords.latitude,
-                            longitude: coords.longitude
-                        });
-                    }
-                },
-                () => console.warn("Could not get user location"),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-
-            return () => {
-                navigator.geolocation.clearWatch(watchId);
-            };
-        }
     }, []);
+
+    useEffect(() => {
+        if (!socket || !activeRequest || !["ACCEPTED", "ONGOING"].includes(activeRequest.status) || !("geolocation" in navigator)) {
+            return;
+        }
+
+        socket.emit("join_request_room", activeRequest.id);
+
+        const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                setUserLocation(coords);
+
+                socket.emit("update_user_location", {
+                    userId: user?.id,
+                    serviceRequestId: activeRequest.id,
+                    latitude: coords.latitude,
+                    longitude: coords.longitude
+                });
+            },
+            () => console.warn("Could not get user location"),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+
+        return () => {
+            navigator.geolocation.clearWatch(watchId);
+        };
+    }, [socket, activeRequest, user?.id]);
 
     useEffect(() => {
         if (!socket || !activeRequest?.captain?.id) return;
 
-        socket.on('captain_location_update', (data) => {
+        const handleCaptainLocation = (data) => {
             if (data.captainId === activeRequest.captain.id) {
                 setCaptainLocation({
                     latitude: data.latitude,
                     longitude: data.longitude
                 });
             }
-        });
+        };
 
-        return () => socket.off('captain_location_update');
+        socket.on('captain_location_update', handleCaptainLocation);
+
+        return () => socket.off('captain_location_update', handleCaptainLocation);
     }, [socket, activeRequest]);
 
     if (loading) {

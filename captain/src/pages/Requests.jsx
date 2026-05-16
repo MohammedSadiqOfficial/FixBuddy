@@ -38,7 +38,7 @@ export default function Requests() {
           }));
 
         setRequests(formattedRequests);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load requests");
       } finally {
         setLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -60,6 +60,7 @@ export default function Dashboard() {
   const [activeJob, setActiveJob] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [captainLocation, setCaptainLocation] = useState(null);
+  const lastLocationSaveRef = useRef(0);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -91,14 +92,21 @@ export default function Dashboard() {
         if (active) {
           setActiveJob(active);
         }
-      } catch (err) {
+
+        if (captain?.latitude && captain?.longitude) {
+          setCaptainLocation({
+            latitude: captain.latitude,
+            longitude: captain.longitude,
+          });
+        }
+      } catch {
         toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
     fetchDashboard();
-  }, []);
+  }, [captain?.latitude, captain?.longitude]);
 
   // Get captain's own location from browser
   useEffect(() => {
@@ -107,13 +115,19 @@ export default function Dashboard() {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setCaptainLocation({ latitude, longitude });
-        // Also push to backend & socket so user can see
+
         if (socket && captain) {
           socket.emit("update_location", { captainId: captain.id, latitude, longitude });
         }
+
+        const now = Date.now();
+        if (now - lastLocationSaveRef.current > 30000) {
+          lastLocationSaveRef.current = now;
+          api.patch("/captain/update-location", { latitude, longitude }).catch(() => {});
+        }
       },
       () => {},
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
     );
     return () => navigator.geolocation.clearWatch(watcher);
   }, [socket, captain]);
@@ -144,7 +158,7 @@ export default function Dashboard() {
       const newStatus = res.data.data.isActive;
       setCaptain({ ...captain, isActive: newStatus });
       toast.success(`You are now ${newStatus ? "Online" : "Offline"}`);
-    } catch (err) {
+    } catch {
       toast.error("Failed to update status");
     }
   };

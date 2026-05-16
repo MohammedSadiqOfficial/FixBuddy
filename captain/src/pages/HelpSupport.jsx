@@ -29,12 +29,12 @@ export default function HelpSupport() {
         setLoading(true);
 
         try {
-            const res = await api.post("/ai/help", { question: userText });
+            const res = await api.post("/ai/help", { question: userText, role: "CAPTAIN" });
             setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: res.data.data }]);
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Sorry, I am having trouble connecting to the AI right now. Please try again.";
             toast.error(errorMsg);
-            setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: `⚠️ ${errorMsg}` }]);
+            setMessages((prev) => [...prev, { id: Date.now() + 1, sender: "bot", text: `Warning: ${errorMsg}` }]);
         } finally {
             setLoading(false);
         }
