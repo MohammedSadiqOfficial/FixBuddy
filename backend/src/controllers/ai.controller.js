@@ -5,24 +5,44 @@ if (process.env.GEMINI_API_KEY) {
     genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 }
 
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const DEFAULT_GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || "gemini-2.0-flash,gemini-2.5-flash-lite")
+    .split(",")
+    .map((model) => model.trim())
+    .filter(Boolean);
+
+const isRecoverableGeminiError = (error) => {
+    const message = error?.message || "";
+    return message.includes("429")
+        || message.toLowerCase().includes("quota")
+        || message.includes("404")
+        || message.includes("503");
+};
+
 async function generateWithFallback(modelName, content, modelOptions = {}) {
-    try {
-        const model = genAI.getGenerativeModel({ model: modelName, ...modelOptions });
-        const result = await model.generateContent(content);
-        return result.response.text();
-    } catch (error) {
-        // If 429 (Quota) or 404 (Model Not Found) or 503 (Model Unavailable)
-        const isQuotaError = error.message && (error.message.includes("429") || error.message.includes("quota"));
-        const isModelError = error.message && (error.message.includes("404") || error.message.includes("503"));
-        
-        if (isQuotaError || isModelError) {
-            console.warn(`Falling back from gemini-2.0-flash to gemini-1.5-flash due to ${isQuotaError ? "quota" : "unavailability"}`);
-            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash", ...modelOptions });
-            const result = await fallbackModel.generateContent(content);
+    const models = [...new Set([modelName, ...DEFAULT_GEMINI_FALLBACK_MODELS])];
+    let lastError = null;
+
+    for (const currentModelName of models) {
+        try {
+            const model = genAI.getGenerativeModel({ model: currentModelName, ...modelOptions });
+            const result = await model.generateContent(content);
             return result.response.text();
+        } catch (error) {
+            lastError = error;
+
+            if (!isRecoverableGeminiError(error)) {
+                throw error;
+            }
+
+            const hasFallback = currentModelName !== models[models.length - 1];
+            if (hasFallback) {
+                console.warn(`Gemini model ${currentModelName} failed; trying next configured model.`);
+            }
         }
-        throw error;
     }
+
+    throw lastError;
 }
 
 const getFallbackHelp = (question, role = 'USER') => {
@@ -87,7 +107,7 @@ export const describeImage = async (req, res, next) => {
             }
         ];
 
-        const text = await generateWithFallback("gemini-2.0-flash", content);
+        const text = await generateWithFallback(DEFAULT_GEMINI_MODEL, content);
         res.status(200).json({ success: true, data: text.trim() });
     } catch (error) {
         console.error("AI describeImage Error:", error);
@@ -125,7 +145,7 @@ The current user role is ${userRole}. Answer for that role unless the question a
 Answer the user's question concisely in a helpful, professional tone. Keep answers under 4 sentences.
 User question: ${question.trim()}`;
 
-        const text = await generateWithFallback("gemini-2.0-flash", prompt);
+        const text = await generateWithFallback(DEFAULT_GEMINI_MODEL, prompt);
         res.status(200).json({ success: true, data: text.trim() });
     } catch (error) {
         console.error("AI getHelp Error:", error);

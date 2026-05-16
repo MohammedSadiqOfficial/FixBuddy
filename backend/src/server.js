@@ -33,6 +33,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/ai', aiRoutes);
 
+// Root server status
+app.get('/', (req, res) => {
+    res.status(200).json({ success: true, message: "FixBuddy Backend is live" });
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ success: true, message: "FixBuddy Backend is healthy" });
