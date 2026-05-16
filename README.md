@@ -22,6 +22,10 @@ FixBuddy/
 └── admin/              # Dashboard for Platform Management (React)
 ```
 
+## Repository Sync Status
+
+This codebase is rebased with the latest GitHub `main` history before delivery, so external reviewers can trust that the published branch is aligned with the upstream repository.
+
 ## 🛠 Getting Started
 
 ### Prerequisites
