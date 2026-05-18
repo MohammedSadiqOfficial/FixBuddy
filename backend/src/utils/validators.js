@@ -2,11 +2,14 @@ import { z } from 'zod';
 
 export const validate = (schema) => (req, res, next) => {
     try {
-        schema.parse({
+        const parsed = schema.parse({
             body: req.body,
             query: req.query,
             params: req.params,
         });
+        if (Object.hasOwn(parsed, 'body')) req.body = parsed.body;
+        if (Object.hasOwn(parsed, 'query')) req.query = parsed.query;
+        if (Object.hasOwn(parsed, 'params')) req.params = parsed.params;
         next();
     } catch (err) {
         next(err); // Passed to error handler which handles ZodError
@@ -15,6 +18,10 @@ export const validate = (schema) => (req, res, next) => {
 
 // Common validations
 const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+const objectIdRegex = /^[a-f\d]{24}$/i;
+const objectId = (message) => z.string().regex(objectIdRegex, message);
+const optionalObjectId = (message) =>
+    z.preprocess((val) => (val === "" || val === null || typeof val === "undefined") ? undefined : val, objectId(message).optional());
 
 export const schemas = {
     userSignup: z.object({
@@ -52,7 +59,7 @@ export const schemas = {
             serviceType: z.string().optional(),
             description: z.string().min(10, "Description must be at least 10 characters"),
             location: z.string().optional(),
-            captainId: z.preprocess((val) => (val === "" || val === null) ? undefined : val, z.string().uuid("Invalid captain ID").optional()),
+            captainId: optionalObjectId("Invalid captain ID"),
             images: z.preprocess((val) => {
                 if (!val) return [];
                 if (Array.isArray(val)) return val.filter(img => typeof img === 'string');
@@ -76,7 +83,7 @@ export const schemas = {
     }),
     addReview: z.object({
         body: z.object({
-            captainId: z.string().uuid("Invalid captain ID"),
+            captainId: objectId("Invalid captain ID"),
             rating: z.coerce.number().min(1).max(5),
             comment: z.string().optional()
         })

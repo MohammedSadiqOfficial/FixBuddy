@@ -19,8 +19,8 @@ export const SocketProvider = ({ children }) => {
 
     newSocket.on("connect", () => {
       console.log("Connected to socket server");
-      if (captain && captain._id) {
-        newSocket.emit("join", { userId: captain._id, role: "captain" });
+      if (captain?.id) {
+        newSocket.emit("register_captain", captain.id);
       }
     });
 
@@ -31,26 +31,23 @@ export const SocketProvider = ({ children }) => {
     return () => newSocket.close();
   }, [isAuthenticated, token, captain]);
 
-  // Location sharing
+  // Lightweight location sharing for pages that do not own their own live map.
   useEffect(() => {
-    if (!socket || !captain || !captain._id) return;
+    if (!socket || !captain?.id) return;
     
     const locationInterval = setInterval(() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            socket.emit("updateLocation", {
-              captainId: captain._id,
-              location: { lat: latitude, lng: longitude }
-            });
+            socket.emit("update_location", { captainId: captain.id, latitude, longitude });
           },
           (error) => {
             console.error("Error getting location:", error);
           }
         );
       }
-    }, 5000); 
+    }, 15000);
 
     return () => clearInterval(locationInterval);
   }, [socket, captain]);

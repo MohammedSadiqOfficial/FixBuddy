@@ -119,6 +119,7 @@ export const createServiceRequest = async (req, res, next) => {
     try {
         const { title, description, serviceType, location, captainId } = req.body;
         const userId = req.user.id;
+        const assignedCaptainId = captainId || null;
 
         // Image URLs from previous middleware if any
         let imageUrls = req.body.images || [];
@@ -132,7 +133,7 @@ export const createServiceRequest = async (req, res, next) => {
         const request = await prisma.serviceRequest.create({
             data: {
                 userId,
-                captainId: (captainId && captainId !== "") ? captainId : null,
+                captainId: assignedCaptainId,
                 title: title || serviceType || 'Service Request',
                 description,
                 location,
@@ -143,10 +144,10 @@ export const createServiceRequest = async (req, res, next) => {
 
         res.status(201).json({ success: true, data: request });
 
-        if (captainId && captainId !== "") {
+        if (assignedCaptainId) {
             try {
                 const captain = await prisma.captain.findUnique({
-                    where: { id: captainId },
+                    where: { id: assignedCaptainId },
                     select: { email: true, name: true }
                 });
                 if (captain?.email) {

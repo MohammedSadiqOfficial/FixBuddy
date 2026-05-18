@@ -86,6 +86,55 @@ export const updateRequestStatus = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Unauthorized or request not found' });
         }
 
+        if (status === 'ACCEPTED') {
+            const accepted = await prisma.serviceRequest.updateMany({
+                where: {
+                    id,
+                    status: 'PENDING',
+                    OR: [
+                        { captainId: null },
+                        { captainId }
+                    ]
+                },
+                data: {
+                    status: 'ACCEPTED',
+                    captainId
+                }
+            });
+
+            if (accepted.count === 0) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'This request has already been accepted.'
+                });
+            }
+
+            const updatedRequest = await prisma.serviceRequest.findUnique({ where: { id } });
+
+            // When a captain accepts a job, broadcast to ALL captains so they remove it from their feed instantly
+            emitToCaptains('request_accepted', { requestId: id, captainId });
+
+            try {
+                const user = await prisma.user.findUnique({
+                    where: { id: request.userId },
+                    select: { email: true }
+                });
+                if (user?.email) {
+                    await sendUserRequestStatusEmail({
+                        to: user.email,
+                        captainName: req.dbCaptain?.name || 'Your captain',
+                        requestTitle: request.title,
+                        status,
+                        amount: updatedRequest.amount
+                    });
+                }
+            } catch (emailError) {
+                console.error('[EMAIL] Notification failed:', emailError.message);
+            }
+
+            return res.status(200).json({ success: true, data: updatedRequest });
+        }
+
         // If CANCELLED (rejected), clean up images and delete the request entirely
         if (status === 'CANCELLED') {
             if (request.images && request.images.length > 0) {
@@ -127,11 +176,6 @@ export const updateRequestStatus = async (req, res, next) => {
             where: { id },
             data: updateData
         });
-
-        // When a captain accepts a job, broadcast to ALL captains so they remove it from their feed instantly
-        if (status === 'ACCEPTED') {
-            emitToCaptains('request_accepted', { requestId: id, captainId });
-        }
 
         // Update captain's total earnings if job is completed
         if (status === 'COMPLETED') {
