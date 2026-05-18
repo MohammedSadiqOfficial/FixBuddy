@@ -27,7 +27,7 @@ model Captain {
   email        String   @unique
   password     String?
   skills       String[]
-  hourlyRate   Float?
+  hourlyRate   Float? @default(0)
   description  String?
   profileImage String?
   workImages   String[]

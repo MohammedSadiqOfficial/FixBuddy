@@ -680,7 +680,7 @@ const AdminDashboard = ({ onLogout }) => {
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         <Badge className={`rounded-full font-black text-[9px] uppercase tracking-widest ${captain.isVerified ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'}`}>
-                                                            {captain.isVerified ? '✓ VERIFIED' : 'PENDING'}
+                                                            {captain.isVerified ? 'VERIFIED' : 'PENDING'}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
