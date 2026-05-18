@@ -251,7 +251,7 @@ export default function Dashboard() {
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="font-semibold">{captain.name}</h4>
                                                     {captain.isVerified && (
-                                                        <Badge variant="outline" className="text-green-600 border-green-300 text-[10px] h-4 px-1.5">✓ Verified</Badge>
+                                                        <Badge variant="outline" className="text-green-600 border-green-300 text-[10px] h-4 px-1.5">Verified</Badge>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-muted-foreground line-clamp-1">{captain.skills?.join(" ")}</p>

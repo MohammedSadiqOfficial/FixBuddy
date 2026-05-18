@@ -103,7 +103,7 @@ export default function FindProfessionals() {
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <h3 className="font-bold text-base">{captain.name}</h3>
                                             {captain.isVerified && (
-                                                <Badge variant="outline" className="text-green-600 border-green-300 text-xs">✓ Verified</Badge>
+                                                <Badge variant="outline" className="text-green-600 border-green-300 text-xs">Verified</Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-1 text-yellow-500 text-xs mt-0.5">
