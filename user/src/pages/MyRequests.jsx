@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import { ClipboardList, Clock, CheckCircle, XCircle, ArrowRight, Trash2, Edit } from "lucide-react";
+import { ClipboardList, Clock, Plus, Trash2, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../components/ui/sheet";
 import { Input } from "../components/ui/input";
@@ -12,6 +11,7 @@ import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import api from "../services/api";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+
 
 const statusConfig = {
     PENDING: { label: "Pending", color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
@@ -97,7 +97,7 @@ export default function MyRequests() {
                     <p className="text-muted-foreground mt-1">Track and manage your service requests.</p>
                 </div>
                 <Button asChild className="rounded-full">
-                    <Link to="/requests/new">+ New Request</Link>
+                    <Link to="/requests/new"><Plus /> New Request</Link>
                 </Button>
             </div>
 

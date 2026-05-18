@@ -130,8 +130,8 @@ export default function SignUpModern() {
                             </Button>
                         </div>
 
-                        <Card className="border-0 bg-transparent shadow-none">
-                            <CardContent className="space-y-8 px-0">
+                       <Card className="ring-0!">
+                            <CardContent className="space-y-8 pt-4">
                                 <div>
                                     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                                         {step === 1 ? "Create your account" : "Verify your email"}

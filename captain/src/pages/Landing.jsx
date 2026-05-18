@@ -16,7 +16,7 @@ export default function Landing() {
           <BrandWordmark subtitle="Captain Network" compact />
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
-              <Button asChild className="gap-2 rounded-full font-semibold shadow-lg transition-all hover:shadow-xl">
+              <Button variant="outline" asChild className="gap-2 rounded-full font-semibold shadow-lg transition-all hover:shadow-xl">
                 <Link to="/dashboard">
                   <LayoutDashboard className="h-4 w-4" />
                   Go to Dashboard
@@ -25,7 +25,7 @@ export default function Landing() {
             ) : (
               <>
                 <Link to="/login" className="text-sm font-medium transition-colors hover:text-primary">Log In</Link>
-                <Button asChild className="h-10 rounded-full px-3 font-semibold shadow-lg transition-all hover:shadow-xl">
+                <Button asChild className="h-12 rounded-full px-4 font-semibold shadow-lg transition-all hover:shadow-xl">
                   <Link to="/signup">Become a Captain</Link>
                 </Button>
               </>
@@ -193,7 +193,7 @@ export default function Landing() {
           <Button asChild size="lg" className="h-14 rounded-full px-8 font-semibold shadow-md">
             <Link to="/signup" className="inline-flex items-center gap-2">Apply Now <ArrowRight className="h-4 w-4" /></Link>
           </Button>
-          <p className="mt-8 text-sm text-muted-foreground">© 2026 FixBuddy Inc. All rights reserved.</p>
+          <p className="mt-8 text-sm text-muted-foreground">ï¿½ 2026 FixBuddy Inc. All rights reserved.</p>
         </div>
       </footer>
     </div>

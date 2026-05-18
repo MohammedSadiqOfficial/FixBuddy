@@ -668,7 +668,7 @@ const AdminDashboard = ({ onLogout }) => {
                                                     </TableCell>
                                                     <TableCell className="font-black text-sm">
                                                         {captain.hourlyRate
-                                                            ? `$${captain.hourlyRate}/hr`
+                                                            ? `$${captain.hourlyRate ? captain.hourlyRate : 0}/hr`
                                                             : <span className="text-zinc-300 font-normal text-xs">—</span>
                                                         }
                                                     </TableCell>

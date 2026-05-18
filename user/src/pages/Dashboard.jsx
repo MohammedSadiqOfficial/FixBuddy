@@ -234,7 +234,7 @@ export default function Dashboard() {
                         <div className="space-y-4">
                             {captains.map((captain) => (
                                 captain.isVerified && (
-                                    <Link key={captain.id} to={`/professionals/${captain.id}`} className="flex items-center justify-between border rounded-xl p-4 hover:shadow-sm transition-all hover:-translate-y-0.5 bg-card/50">
+                                    <Link key={captain.id} to={`/professionals/${captain.id}`} className="flex flex-col md:flex-row items-start md:items-center justify-between border rounded-xl p-4 hover:shadow-sm transition-all hover:-translate-y-0.5 bg-card/50">
                                         <div className="flex items-center gap-4">
                                             <Avatar className="h-12 w-12 border-2 border-primary/10 shadow-sm">
                                                 <AvatarImage src={captain.profileImage} alt={captain.name} />
